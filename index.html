@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Video Platform</title>
+    <link href="https://vjs.zencdn.net/8.3.0/video-js.css" rel="stylesheet" />
+    <style>
+        body { font-family: Arial, sans-serif; background-color: #f4f4f4; margin: 0; }
+        .header { display: flex; justify-content: space-between; padding: 15px 30px; background: #222; color: white; }
+        .auth-buttons button { margin-left: 10px; padding: 8px 15px; cursor: pointer; }
+        
+        .main-container { display: flex; max-width: 1400px; margin: 20px auto; gap: 20px; padding: 0 20px; }
+        
+        .video-section { flex: 3; }
+        .video-container { width: 100%; background: #000; }
+        
+        .sidebar { flex: 1; display: flex; flex-direction: column; gap: 15px; }
+        
+        /* Ad Spaces */
+        .ad-banner-top { width: 100%; height: 90px; background: #ddd; text-align: center; line-height: 90px; margin-bottom: 20px; }
+        .ad-sidebar { width: 100%; height: 250px; background: #ddd; text-align: center; line-height: 250px; }
+    </style>
+</head>
+<body>
+
+    <header class="header">
+        <div class="logo"><h2>MyTube</h2></div>
+        <div class="auth-buttons">
+            <button onclick="openLoginModal()">Login</button>
+            <button onclick="openSignupModal()">Sign Up</button>
+        </div>
+    </header>
+
+    <div class="main-container">
+        <div class="video-section">
+            <div class="ad-banner-top">Advertisement Space (728x90)</div>
+            
+            <div class="video-container">
+                <video id="main-player" class="video-js vjs-default-skin vjs-big-play-centered" controls preload="auto" width="100%" height="500" data-setup='{"playbackRates": [0.5, 1, 1.5, 2]}'>
+                    <source src="https://path-to-your-cdn.com/video/master.m3u8" type="application/x-mpegURL">
+                    <track kind="captions" src="captions.vtt" srclang="en" label="English" default>
+                    <p class="vjs-no-js">To view this video please enable JavaScript.</p>
+                </video>
+            </div>
+            
+            <h1 style="margin-top: 15px;">Sample Video Title</h1>
+            <p>Uploaded by User123 | 1.2M Views</p>
+        </div>
+
+        <div class="sidebar">
+            <div class="ad-sidebar">Advertisement Space (300x250)</div>
+            <h3>Recommended</h3>
+            <div style="height: 120px; background: #ccc;">Video Thumbnail 1</div>
+            <div style="height: 120px; background: #ccc;">Video Thumbnail 2</div>
+            <div style="height: 120px; background: #ccc;">Video Thumbnail 3</div>
+        </div>
+    </div>
+
+    <script src="https://vjs.zencdn.net/8.3.0/video.min.js"></script>
+    <script>
+        // Initialize player and custom logic
+        const player = videojs('main-player');
+
+        // Example: Track when a user plays a video to send analytics to backend
+        player.on('play', () => {
+            console.log('Video started playing - Trigger analytics/ad scripts here.');
+        });
+
+        function openLoginModal() {
+            alert("Trigger Login Modal Component");
+        }
+        function openSignupModal() {
+            alert("Trigger Signup Modal Component");
+        }
+    </script>
+</body>
+</html>
