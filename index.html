@@ -10,7 +10,7 @@
             --bg-color: #0f0f0f;
             --text-color: #f1f1f1;
             --secondary-bg: #272727;
-            --accent-color: #ff9900; /* Common accent color for tube sites */
+            --accent-color: #ff9900;
             --hover-color: #3f3f3f;
         }
 
@@ -36,6 +36,7 @@
             font-size: 24px;
             font-weight: bold;
             letter-spacing: 1px;
+            cursor: pointer;
         }
 
         .brand span {
@@ -51,7 +52,6 @@
 
         .grid-container {
             display: grid;
-            /* 4 Columns by default */
             grid-template-columns: repeat(4, 1fr);
             gap: 20px;
             row-gap: 30px;
@@ -73,6 +73,7 @@
             border-radius: 8px;
             margin-bottom: 10px;
             position: relative;
+            background-position: center;
         }
 
         .duration {
@@ -124,11 +125,14 @@
             border-top: 5px solid var(--accent-color);
             border-radius: 50%;
             animation: spin 1s linear infinite;
-            display: none; /* Hidden by default */
+            display: none;
             pointer-events: none;
         }
 
-        @keyframes spin { 0% { transform: translate(-50%, -50%) rotate(0deg); } 100% { transform: translate(-50%, -50%) rotate(360deg); } }
+        @keyframes spin { 
+            0% { transform: translate(-50%, -50%) rotate(0deg); } 
+            100% { transform: translate(-50%, -50%) rotate(360deg); } 
+        }
 
         .player-title { font-size: 22px; margin: 15px 0 5px 0; }
         .player-meta { font-size: 14px; color: #aaa; padding-bottom: 15px; border-bottom: 1px solid #333; }
@@ -147,6 +151,7 @@
             background-color: #333;
             border-radius: 4px;
             flex-shrink: 0;
+            background-position: center;
         }
 
         .sidebar-info .video-title { font-size: 14px; }
@@ -155,7 +160,7 @@
 <body>
 
     <header>
-        <div class="brand" onclick="goHome()" style="cursor: pointer;">
+        <div class="brand" onclick="goHome()">
             Stream<span>Tube</span>
         </div>
         <div>
@@ -173,13 +178,13 @@
         <div class="main-player-section">
             <div class="video-wrapper">
                 <video id="main-video" controls>
-                    <source src="https://www.w3schools.com/html/mov_bbb.mp4" type="video/mp4">
+                    <source src="" type="video/mp4">
                     Your browser does not support HTML video.
                 </video>
                 <div class="loading-spinner" id="spinner"></div>
             </div>
-            <h1 class="player-title" id="current-title">Big Buck Bunny</h1>
-            <div class="player-meta">1,204,553 views • Uploaded 2 days ago</div>
+            <h1 class="player-title" id="current-title">Loading...</h1>
+            <div class="player-meta" id="current-meta">Loading details...</div>
         </div>
 
         <div class="sidebar-section">
@@ -196,56 +201,78 @@
         const videoGrid = document.getElementById('video-grid');
         const sidebarGrid = document.getElementById('sidebar-grid');
         const mainVideo = document.getElementById('main-video');
-        const spinner = document.getElementById('spinner');
         const currentTitle = document.getElementById('current-title');
+        const currentMeta = document.getElementById('current-meta');
+        const spinner = document.getElementById('spinner');
 
-        // Generate Dummy Data for 16 Videos (4x4 Grid)
-        const generateVideos = () => {
-            let html = '';
-            for(let i = 1; i <= 16; i++) {
-                html += `
-                <div class="video-card" onclick="playVideo('Exciting Video Title ${i}')">
-                    <div class="thumbnail">
-                        <div class="duration">10:${i < 10 ? '0'+i : i}</div>
-                    </div>
-                    <div class="video-title">Exciting Video Title ${i}</div>
-                    <div class="video-meta">User${i}99 • ${Math.floor(Math.random() * 900) + 10}K views</div>
-                </div>`;
-            }
-            return html;
+        // Backend API URL (Ensure your node server is running on this port)
+        const API_URL = 'http://localhost:3000/api';
+
+        // Utility: Format view counts
+        const formatViews = (views) => {
+            if (views >= 1000000) return (views / 1000000).toFixed(1) + 'M';
+            if (views >= 1000) return (views / 1000).toFixed(1) + 'K';
+            return views;
         };
 
-        // Generate Sidebar Videos
-        const generateSidebar = () => {
-            let html = '';
-            for(let i = 1; i <= 6; i++) {
-                html += `
-                <div class="sidebar-item" onclick="playVideo('Recommended Video ${i}')">
-                    <div class="sidebar-thumbnail"></div>
-                    <div class="sidebar-info">
-                        <div class="video-title">Recommended Video ${i}</div>
-                        <div class="video-meta">User Name • 1.2M views</div>
+        // Fetch and render the 4x4 Grid
+        async function loadHomeGrid() {
+            try {
+                const response = await fetch(`${API_URL}/videos/trending`);
+                const videos = await response.json();
+                
+                videoGrid.innerHTML = videos.map(video => `
+                    <div class="video-card" onclick="openVideo('${video.id}')">
+                        <div class="thumbnail" style="background-image: url('${video.thumbnailUrl}'); background-size: cover;">
+                            <div class="duration">${video.duration}</div>
+                        </div>
+                        <div class="video-title">${video.title}</div>
+                        <div class="video-meta">${video.uploader} • ${formatViews(video.views)} views</div>
                     </div>
-                </div>`;
+                `).join('');
+            } catch (error) {
+                console.error("Error loading grid:", error);
+                videoGrid.innerHTML = "<p>Error loading videos. Ensure backend is running.</p>";
             }
-            return html;
-        };
-
-        // Initialize the grids
-        videoGrid.innerHTML = generateVideos();
-        sidebarGrid.innerHTML = generateSidebar();
-
-        // Navigation Logic
-        function playVideo(title) {
-            homeView.style.display = 'none';
-            playerView.style.display = 'flex';
-            currentTitle.innerText = title;
-            
-            // Reload and play the video to trigger the loading spinner
-            mainVideo.load();
-            mainVideo.play();
         }
 
+        // Fetch specific video data and open the player
+        async function openVideo(videoId) {
+            try {
+                // Fetch the main video details
+                const videoRes = await fetch(`${API_URL}/videos/${videoId}`);
+                const videoData = await videoRes.json();
+
+                // Fetch the sidebar recommendations
+                const relatedRes = await fetch(`${API_URL}/videos/${videoId}/related`);
+                const relatedData = await relatedRes.json();
+
+                // Update UI with fetched data
+                currentTitle.innerText = videoData.title;
+                currentMeta.innerText = `${videoData.uploader} • ${formatViews(videoData.views)} views`;
+                mainVideo.src = videoData.videoUrl;
+                
+                sidebarGrid.innerHTML = relatedData.map(v => `
+                    <div class="sidebar-item" onclick="openVideo('${v.id}')">
+                        <div class="sidebar-thumbnail" style="background-image: url('${v.thumbnailUrl}'); background-size: cover;"></div>
+                        <div class="sidebar-info">
+                            <div class="video-title">${v.title}</div>
+                            <div class="video-meta">${v.uploader} • ${formatViews(v.views)} views</div>
+                        </div>
+                    </div>
+                `).join('');
+
+                // Switch Views and Play
+                homeView.style.display = 'none';
+                playerView.style.display = 'flex';
+                mainVideo.play();
+
+            } catch (error) {
+                console.error("Error loading video details:", error);
+            }
+        }
+
+        // Return to the grid view
         function goHome() {
             playerView.style.display = 'none';
             homeView.style.display = 'block';
@@ -253,20 +280,12 @@
         }
 
         // Loading Spinner Logic
-        // Triggers when the video is buffering
-        mainVideo.addEventListener('waiting', () => {
-            spinner.style.display = 'block';
-        });
+        mainVideo.addEventListener('waiting', () => spinner.style.display = 'block');
+        mainVideo.addEventListener('playing', () => spinner.style.display = 'none');
+        mainVideo.addEventListener('canplay', () => spinner.style.display = 'none');
 
-        // Hides when the video has enough data to play
-        mainVideo.addEventListener('playing', () => {
-            spinner.style.display = 'none';
-        });
-
-        // Hides when video can play without buffering
-        mainVideo.addEventListener('canplay', () => {
-            spinner.style.display = 'none';
-        });
+        // Initialize the page by loading the grid
+        loadHomeGrid();
     </script>
 </body>
 </html>
