@@ -3,42 +3,43 @@ const cors = require('cors');
 const app = express();
 const port = 3000;
 
-// Enable CORS so the frontend can communicate with the backend
+// Enable CORS so index.html can fetch data without security errors
 app.use(cors());
 app.use(express.json());
 
-// Mock Database of Videos
+// Mock Database with reliable image and video placeholders
 const mockDatabase = Array.from({ length: 50 }, (_, i) => ({
     id: `vid_${i + 1}`,
-    title: `Exciting Video Title ${i + 1}`,
-    uploader: `User${Math.floor(Math.random() * 100)}`,
+    title: `StreamTube Exclusive Video ${i + 1}`,
+    uploader: `Creator${Math.floor(Math.random() * 100)}`,
     views: Math.floor(Math.random() * 2000000) + 1000,
     duration: `10:${i < 10 ? '0'+i : i}`,
-    thumbnailUrl: `https://via.placeholder.com/320x180?text=Thumbnail+${i + 1}`,
-    videoUrl: `https://www.w3schools.com/html/mov_bbb.mp4` // Placeholder video link
+    // Using picsum.photos for reliable, distinct thumbnail generation
+    thumbnailUrl: `https://picsum.photos/seed/${i + 1}/320/180`, 
+    videoUrl: `https://www.w3schools.com/html/mov_bbb.mp4`
 }));
 
-// Endpoint 1: Get Trending Videos (Populates the 4x4 Home Grid)
+// Endpoint 1: Get 16 videos for the Home Grid
 app.get('/api/videos/trending', (req, res) => {
-    // Return the first 16 videos for the grid
     const trendingVideos = mockDatabase.slice(0, 16);
     res.json(trendingVideos);
 });
 
-// Endpoint 2: Get a Single Video by ID (When a user clicks a video)
+// Endpoint 2: Get specific details when a video is clicked
 app.get('/api/videos/:id', (req, res) => {
     const video = mockDatabase.find(v => v.id === req.params.id);
     if (!video) return res.status(404).json({ error: 'Video not found' });
     res.json(video);
 });
 
-// Endpoint 3: Get Related Videos (Populates the Sidebar)
+// Endpoint 3: Get 6 random videos for the Sidebar
 app.get('/api/videos/:id/related', (req, res) => {
-    // Return 6 random videos for the sidebar recommendations
     const related = [...mockDatabase].sort(() => 0.5 - Math.random()).slice(0, 6);
     res.json(related);
 });
 
+// Start the server
 app.listen(port, () => {
-    console.log(`API Server running at http://localhost:${port}`);
+    console.log(`✅ Backend Server running at http://localhost:${port}`);
+    console.log(`You can now open index.html in your browser!`);
 });
