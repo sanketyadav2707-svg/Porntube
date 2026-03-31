@@ -3,76 +3,270 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Video Platform</title>
-    <link href="https://vjs.zencdn.net/8.3.0/video-js.css" rel="stylesheet" />
+    <title>StreamTube - Dark Mode</title>
     <style>
-        body { font-family: Arial, sans-serif; background-color: #f4f4f4; margin: 0; }
-        .header { display: flex; justify-content: space-between; padding: 15px 30px; background: #222; color: white; }
-        .auth-buttons button { margin-left: 10px; padding: 8px 15px; cursor: pointer; }
+        /* Base Dark Theme Variables */
+        :root {
+            --bg-color: #0f0f0f;
+            --text-color: #f1f1f1;
+            --secondary-bg: #272727;
+            --accent-color: #ff9900; /* Common accent color for tube sites */
+            --hover-color: #3f3f3f;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
         
-        .main-container { display: flex; max-width: 1400px; margin: 20px auto; gap: 20px; padding: 0 20px; }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+        }
+
+        /* Navbar */
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 30px;
+            background-color: var(--secondary-bg);
+            border-bottom: 1px solid #333;
+        }
+
+        .brand {
+            font-size: 24px;
+            font-weight: bold;
+            letter-spacing: 1px;
+        }
+
+        .brand span {
+            color: var(--accent-color);
+        }
+
+        /* 4x4 Video Grid Layout */
+        #home-view {
+            padding: 30px;
+            max-width: 1600px;
+            margin: 0 auto;
+        }
+
+        .grid-container {
+            display: grid;
+            /* 4 Columns by default */
+            grid-template-columns: repeat(4, 1fr);
+            gap: 20px;
+            row-gap: 30px;
+        }
+
+        .video-card {
+            cursor: pointer;
+            transition: transform 0.2s ease;
+        }
+
+        .video-card:hover {
+            transform: scale(1.02);
+        }
+
+        .thumbnail {
+            width: 100%;
+            aspect-ratio: 16/9;
+            background-color: #333;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            position: relative;
+        }
+
+        .duration {
+            position: absolute;
+            bottom: 5px;
+            right: 5px;
+            background: rgba(0,0,0,0.8);
+            padding: 2px 5px;
+            border-radius: 4px;
+            font-size: 12px;
+        }
+
+        .video-title { font-size: 16px; font-weight: 600; margin-bottom: 5px; line-height: 1.3; }
+        .video-meta { font-size: 13px; color: #aaaaaa; }
+
+        /* Player View Layout */
+        #player-view {
+            display: none; /* Hidden until a video is clicked */
+            max-width: 1600px;
+            margin: 20px auto;
+            padding: 0 30px;
+            gap: 25px;
+        }
+
+        .main-player-section { flex: 3; min-width: 0; }
+        .sidebar-section { flex: 1; min-width: 300px; }
+
+        /* Video Player & Loading Animation */
+        .video-wrapper {
+            position: relative;
+            width: 100%;
+            background: #000;
+            border-radius: 8px;
+            overflow: hidden;
+            aspect-ratio: 16/9;
+        }
+
+        video { width: 100%; height: 100%; outline: none; }
+
+        /* Custom Centered Loading Spinner */
+        .loading-spinner {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 50px;
+            height: 50px;
+            border: 5px solid rgba(255, 255, 255, 0.3);
+            border-top: 5px solid var(--accent-color);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            display: none; /* Hidden by default */
+            pointer-events: none;
+        }
+
+        @keyframes spin { 0% { transform: translate(-50%, -50%) rotate(0deg); } 100% { transform: translate(-50%, -50%) rotate(360deg); } }
+
+        .player-title { font-size: 22px; margin: 15px 0 5px 0; }
+        .player-meta { font-size: 14px; color: #aaa; padding-bottom: 15px; border-bottom: 1px solid #333; }
+
+        /* Sidebar Recommended Videos */
+        .sidebar-item {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+            cursor: pointer;
+        }
         
-        .video-section { flex: 3; }
-        .video-container { width: 100%; background: #000; }
-        
-        .sidebar { flex: 1; display: flex; flex-direction: column; gap: 15px; }
-        
-        /* Ad Spaces */
-        .ad-banner-top { width: 100%; height: 90px; background: #ddd; text-align: center; line-height: 90px; margin-bottom: 20px; }
-        .ad-sidebar { width: 100%; height: 250px; background: #ddd; text-align: center; line-height: 250px; }
+        .sidebar-thumbnail {
+            width: 160px;
+            height: 90px;
+            background-color: #333;
+            border-radius: 4px;
+            flex-shrink: 0;
+        }
+
+        .sidebar-info .video-title { font-size: 14px; }
     </style>
 </head>
 <body>
 
-    <header class="header">
-        <div class="logo"><h2>MyTube</h2></div>
-        <div class="auth-buttons">
-            <button onclick="openLoginModal()">Login</button>
-            <button onclick="openSignupModal()">Sign Up</button>
+    <header>
+        <div class="brand" onclick="goHome()" style="cursor: pointer;">
+            Stream<span>Tube</span>
+        </div>
+        <div>
+            <button style="background:var(--accent-color); border:none; padding:8px 15px; border-radius:4px; color:#fff; font-weight:bold; cursor:pointer;">Log In</button>
         </div>
     </header>
 
-    <div class="main-container">
-        <div class="video-section">
-            <div class="ad-banner-top">Advertisement Space (728x90)</div>
-            
-            <div class="video-container">
-                <video id="main-player" class="video-js vjs-default-skin vjs-big-play-centered" controls preload="auto" width="100%" height="500" data-setup='{"playbackRates": [0.5, 1, 1.5, 2]}'>
-                    <source src="https://path-to-your-cdn.com/video/master.m3u8" type="application/x-mpegURL">
-                    <track kind="captions" src="captions.vtt" srclang="en" label="English" default>
-                    <p class="vjs-no-js">To view this video please enable JavaScript.</p>
-                </video>
+    <div id="home-view">
+        <h2 style="margin-bottom: 20px;">Trending Now</h2>
+        <div class="grid-container" id="video-grid">
             </div>
-            
-            <h1 style="margin-top: 15px;">Sample Video Title</h1>
-            <p>Uploaded by User123 | 1.2M Views</p>
+    </div>
+
+    <div id="player-view">
+        <div class="main-player-section">
+            <div class="video-wrapper">
+                <video id="main-video" controls>
+                    <source src="https://www.w3schools.com/html/mov_bbb.mp4" type="video/mp4">
+                    Your browser does not support HTML video.
+                </video>
+                <div class="loading-spinner" id="spinner"></div>
+            </div>
+            <h1 class="player-title" id="current-title">Big Buck Bunny</h1>
+            <div class="player-meta">1,204,553 views • Uploaded 2 days ago</div>
         </div>
 
-        <div class="sidebar">
-            <div class="ad-sidebar">Advertisement Space (300x250)</div>
-            <h3>Recommended</h3>
-            <div style="height: 120px; background: #ccc;">Video Thumbnail 1</div>
-            <div style="height: 120px; background: #ccc;">Video Thumbnail 2</div>
-            <div style="height: 120px; background: #ccc;">Video Thumbnail 3</div>
+        <div class="sidebar-section">
+            <h3>Up Next</h3>
+            <div style="margin-top: 15px;" id="sidebar-grid">
+                </div>
         </div>
     </div>
 
-    <script src="https://vjs.zencdn.net/8.3.0/video.min.js"></script>
     <script>
-        // Initialize player and custom logic
-        const player = videojs('main-player');
+        // DOM Elements
+        const homeView = document.getElementById('home-view');
+        const playerView = document.getElementById('player-view');
+        const videoGrid = document.getElementById('video-grid');
+        const sidebarGrid = document.getElementById('sidebar-grid');
+        const mainVideo = document.getElementById('main-video');
+        const spinner = document.getElementById('spinner');
+        const currentTitle = document.getElementById('current-title');
 
-        // Example: Track when a user plays a video to send analytics to backend
-        player.on('play', () => {
-            console.log('Video started playing - Trigger analytics/ad scripts here.');
+        // Generate Dummy Data for 16 Videos (4x4 Grid)
+        const generateVideos = () => {
+            let html = '';
+            for(let i = 1; i <= 16; i++) {
+                html += `
+                <div class="video-card" onclick="playVideo('Exciting Video Title ${i}')">
+                    <div class="thumbnail">
+                        <div class="duration">10:${i < 10 ? '0'+i : i}</div>
+                    </div>
+                    <div class="video-title">Exciting Video Title ${i}</div>
+                    <div class="video-meta">User${i}99 • ${Math.floor(Math.random() * 900) + 10}K views</div>
+                </div>`;
+            }
+            return html;
+        };
+
+        // Generate Sidebar Videos
+        const generateSidebar = () => {
+            let html = '';
+            for(let i = 1; i <= 6; i++) {
+                html += `
+                <div class="sidebar-item" onclick="playVideo('Recommended Video ${i}')">
+                    <div class="sidebar-thumbnail"></div>
+                    <div class="sidebar-info">
+                        <div class="video-title">Recommended Video ${i}</div>
+                        <div class="video-meta">User Name • 1.2M views</div>
+                    </div>
+                </div>`;
+            }
+            return html;
+        };
+
+        // Initialize the grids
+        videoGrid.innerHTML = generateVideos();
+        sidebarGrid.innerHTML = generateSidebar();
+
+        // Navigation Logic
+        function playVideo(title) {
+            homeView.style.display = 'none';
+            playerView.style.display = 'flex';
+            currentTitle.innerText = title;
+            
+            // Reload and play the video to trigger the loading spinner
+            mainVideo.load();
+            mainVideo.play();
+        }
+
+        function goHome() {
+            playerView.style.display = 'none';
+            homeView.style.display = 'block';
+            mainVideo.pause();
+        }
+
+        // Loading Spinner Logic
+        // Triggers when the video is buffering
+        mainVideo.addEventListener('waiting', () => {
+            spinner.style.display = 'block';
         });
 
-        function openLoginModal() {
-            alert("Trigger Login Modal Component");
-        }
-        function openSignupModal() {
-            alert("Trigger Signup Modal Component");
-        }
+        // Hides when the video has enough data to play
+        mainVideo.addEventListener('playing', () => {
+            spinner.style.display = 'none';
+        });
+
+        // Hides when video can play without buffering
+        mainVideo.addEventListener('canplay', () => {
+            spinner.style.display = 'none';
+        });
     </script>
 </body>
 </html>
